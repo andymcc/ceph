@@ -2806,11 +2806,15 @@ int OSDMonitor::prepare_command_pool_set(map<string,cmd_vartype> &cmdmap,
 	return -EEXIST;
       else
 	return 0;
-    } else if (n > (int)p.get_pg_num() * g_conf->mon_osd_max_split_ratio) {
-      ss << "specified pg_num " << n << " is too large (> current "
-	 << p.get_pg_num() << '*' << g_conf->mon_osd_max_split_ratio << ')';
-      return -E2BIG;
     } else {
+      int expected_osds = MIN(p.get_pg_num(), osdmap.get_num_osds());
+      int pgs_per_osd = (int)(((float)n) / p.get_pg_num() / expected_osds);
+      if (pgs_per_osd > g_conf->mon_osd_max_split_count) {
+            ss << "specified pg_num " << n << " is too large (> current "
+               << p.get_pg_num() << '*' << g_conf->mon_osd_max_split_count
+               << ')';
+            return -E2BIG;
+      }
       for(set<pg_t>::iterator i = mon->pgmon()->pg_map.creating_pgs.begin();
 	  i != mon->pgmon()->pg_map.creating_pgs.end();
 	  ++i) {

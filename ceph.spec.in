@@ -9,8 +9,8 @@
 # common
 #################################################################################
 Name:		ceph
-Version:	@VERSION@
-Release:	@RPM_RELEASE@%{?dist}
+Version:        @VERSION@
+Release:        @RPM_RELEASE@%{?dist}
 Summary:	User space components of the Ceph file system
 License:	GPL-2.0
 Group:		System Environment/Base
@@ -344,6 +344,11 @@ rm -rf $RPM_BUILD_ROOT
 /sbin/ldconfig
 /sbin/chkconfig --add ceph
 mkdir -p %{_localstatedir}/run/ceph/
+useradd -c "Ceph User" -s /sbin/nologin -r -d %{_localstatedir}/ceph ceph
+chown ceph.ceph $RPM_BUILD_ROOT%{_localstatedir}/run/ceph
+chown ceph.ceph $RPM_BUILD_ROOT%{_localstatedir}/log/ceph/
+chown ceph.ceph $RPM_BUILD_ROOT%{_localstatedir}/log/radosgw
+chown -R ceph.ceph $RPM_BUILD_ROOT%{_localstatedir}/lib/ceph/
 
 %preun
 %if %{defined suse_version}
@@ -525,12 +530,18 @@ fi
 %{_mandir}/man8/radosgw-admin.8*
 %{_sbindir}/rcceph-radosgw
 %dir %{_localstatedir}/log/radosgw/
+%dir %{_localstatedir}/log/ceph/
+%dir %{_localstatedir}/run/ceph/
 
 %post radosgw
 /sbin/ldconfig
 %if %{defined suse_version}
 %fillup_and_insserv -f -y ceph-radosgw
 %endif
+useradd -c "Ceph User" -s /sbin/nologin -r -d %{_localstatedir}/ceph ceph
+chown ceph.ceph %{_localstatedir}/log/radosgw/
+chown ceph.ceph %{_localstatedir}/log/ceph/
+chown ceph.ceph %{_localstatedir}/run/ceph/
 
 %preun radosgw
 %if %{defined suse_version}
